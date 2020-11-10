@@ -50,7 +50,7 @@ async function startScraping(url) {
       return integerPrice;
     }
 
-    const sendEmail = async () => {
+    const sendEmail = async (title='', message='') => {
       try {
         let transporter = nodemailer.createTransport({
           service: process.env.MAIL_SERVICE,
@@ -63,8 +63,8 @@ async function startScraping(url) {
         var mailOptions = {
           from: process.env.MAIL_USER,
           to: process.env.MAIL_TO,
-          subject: 'SEKIRO ESTA POR DEBAJO DE LOS 40 PAVOS',
-          text: 'DALEDALEDALE'
+          subject: title.length > 0 ? title : 'SEKIRO ESTA POR DEBAJO DE LOS 40 PAVOS',
+          text: message.length > 0 ? message : 'DALEDALEDALE'
         };
 
         await transporter.sendMail(mailOptions, function (error, info) {
@@ -94,6 +94,7 @@ async function startScraping(url) {
 
   } catch (err) {
     console.log('ERROR >>> ', err);
+    sendEmail('SCRIPT ERROR',err);
   }
 }
 
