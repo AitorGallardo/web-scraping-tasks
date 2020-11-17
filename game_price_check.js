@@ -1,141 +1,163 @@
-const puppeteer = require('puppeteer');
-const nodemailer = require('nodemailer');
-
-require('dotenv').config();
+const cheerio = require('cheerio')
+const fetch = require('node-fetch')
 
 
-const url = 'https://www.g2a.com/search?query=sekiro&sort=price-lowest-first';
+const sendEmail = require('./mailSender.js')
 
-async function sendEmail (title = '', message = '') {
+var desiredGamePrice = 25;
 
-  title = title.length > 0 ? title : 'SEKIRO UNDER << 30 € >>';
-  message = message.length > 0 ? message : '>>>>>>>>>>>>>>>';
-
-  try {
-    let transporter = nodemailer.createTransport({
-      service: process.env.MAIL_SERVICE,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
-
-    var mailOptions = {
-      from: process.env.MAIL_USER,
-      to: process.env.MAIL_TO,
-      subject: title,
-      html:message
-    };
-
-    await transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
-  } catch (err) {
-    console.log(err)
-  }
+function Game(args) {
+    this.region = args.region
+    this.price = parseFloat(args.price); 
+    this.platform = args.platform
+    this.link = args.link
+    this.name = args.name
 }
 
-async function startScraping(url) {
+async function main(){
+    
+    try{
+        const start = new Date();
+        const instantGamingGamePromise =  scrapeInstantGaming()
+        const cdkeybayGamePromise =  scrapeCDKEYBAY()
+        const [instantGamingGame,cdkeybayGame] = await Promise.all([ instantGamingGamePromise,cdkeybayGamePromise])
+        const end = new Date() - start
+        const cheapestGame  =  instantGamingGame.price < cdkeybayGame.price ? instantGamingGame :cdkeybayGame
+        console.log(' --- CHEAPEST_GAME ---','\n',cheapestGame, '\n', ' ---------------------', '\n');
+        console.log('---------> Sending email...');
 
-  try {
+        const mailTitle = cheapestGame.price <= desiredGamePrice ? '🚀🚀🚀BUY SEKIRO🚀🚀🚀' : '💩SEKIRO💩'
+        await sendEmail({ title: mailTitle,...cheapestGame})
+        console.log('TOTAL_TIME: ',end, '\n');
 
-    async function launchAndGoToPage() {
-      const maxTries = 5;
-      // some times we get 'ERR_NETWORK_CHANGED' on heroku, thats why we do more attempts in order to dont wait till the script runs again
-      for (let tries = 0; tries < maxTries; tries++) 
-        try {
-          var browser = await puppeteer.launch({ args: ['--no-sandbox'] }); // args needed to run properly on heroku
-          const page = await browser.newPage();
-          const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
-          await page.setUserAgent(mozzilla_windows_userAgent);
-          await page.goto(url);
-          return {browser, page};
-
-        } catch (err) {
-          if (tries === 4) {
-            if(browser) browser.close();
-            throw new Error('Not posible to launchPuppeter >> ', err);
-          }
-          console.log(`>>LaunchPupperAndGoToPageFunctionCatch>>Attempt N: ${tries}` , err)
-        }
+    }catch(err){
+        console.log('MAIN ERROR > ', err);
     }
-
-    async function passCookieBanner(page) {
-      const cookieBannerMaybeLater_buttonClass = 'button.button.button--size-large.button--type-transparent';
-      const cookieBannerMaybeLater_button = await page.$(cookieBannerMaybeLater_buttonClass);
-      if (cookieBannerMaybeLater_button) {
-        await cookieBannerMaybeLater_button.click();
-      }
-    }
-
-    const getAllGameCardElements = async () => {
-
-      const card_base_nestedClass = 'ul.products-grid div.Card__base';
-      const all_card_elements = await page.$$(card_base_nestedClass);
-      return all_card_elements;
-    }
-
-    const getTextFromDomElement = async (el, element_class) => {
-      const element = await el.$(element_class);
-      const elementTitle = await element.getProperty('textContent');
-      const elementTitleTxt = await elementTitle.jsonValue();
-      return elementTitleTxt;
-    }
-
-    const getCheapestGame = async (all_card_elements) => {
-
-      const interested_game_regions = ['EUROPE', 'GLOBAL'];
-      const gameTitleElementClass = 'h3.Card__title a';
-
-      for (let card of all_card_elements) {
-        const gameTitleTxt = await getTextFromDomElement(card, gameTitleElementClass);
-        if (interested_game_regions.some(e => gameTitleTxt.includes(e))) {
-          return card;
-        }
-      }
-    }
-
-    const getGamePrice = async (e) => {
-      const elementClass = 'span.Card__price-cost.price';
-      const price = await getTextFromDomElement(e, elementClass);
-      const integerPrice = parseInt(price.split(" ")[0])
-      return integerPrice;
-    }
-
-    const getGameLink = async (e) => {
-      const element_class = 'div.Card__media a';
-      const element = await e.$(element_class);
-      const elementHref = await element.getProperty('href');
-      const elementHrefText = await elementHref.jsonValue()  
-      return elementHrefText
-    } 
-
-    const { browser, page } = await launchAndGoToPage();
-    await passCookieBanner(page);
-    const all_card_elements = await getAllGameCardElements(page);
-    const selectedGame = await getCheapestGame(all_card_elements);
-    const gamePrice = await getGamePrice(selectedGame);
-    const gameLink = await getGameLink(selectedGame)
-    await browser.close();
-
-    const maxPrice = 30;
-    const message = `<p style="font-size:48px; font-weight: bold"> Price: ${gamePrice} € </p> </br>   ${gameLink}`
-
-    if (gamePrice <= maxPrice) {
-      await sendEmail('SEKIRO HITTED DESIRED RANGE PRICE', message)
-    } else {
-      console.log(message);
-      await sendEmail('GAME SCRIPT UP', message);
-    }
-
-  } catch (err) {
-    console.log('ERROR >>> ', err);
-    await sendEmail('GAME SCRIPT ERROR', err);
-  }
 }
 
-startScraping(url);
+async function scrapeInstantGaming(){
+    try{
+        const start = new Date();
+        console.log('InstantGamingStarts....\n');
+        const url = 'https://www.instant-gaming.com/en/search/?query=sekiro'
+        const html = await webRequest(url);
+        const $ = cheerio.load(html);
+        const div_search_children = getInstantGamingDomTree($);
+        const allGames = getInstantGamingElementsData($, div_search_children);
+        const desiredGames = filterDesiredGames(allGames)
+        const cheapestGame = getCheapestGame(desiredGames)
+        console.log('INSTANT-PRICE', cheapestGame, '\n');
+        const end = new Date() - start
+        console.log('InstantGamingEnds....   Time: ',end, '\n');
+        return cheapestGame;
+    }catch(err){
+        console.log('INSTANT-GAMING-SCRAPE-ERROR',err, '\n');
+    }
+    
+}
+async function scrapeCDKEYBAY(){
+    try{
+        const start = new Date();
+        console.log('CDKEYBAYStarts....\n');
+        const url = 'https://www.cdkeybay.com/search/sekiro-shadows-die-twice'
+        const html = await webRequest(url);
+        const $ = cheerio.load(html);
+        const rawDAta = getInstantCDKEYBAYTree($);
+        const allGames = cleanWebData(rawDAta);
+        const desiredGames = filterDesiredGames(allGames)
+        const cheapestGame = getCheapestGame(desiredGames)
+
+        console.log('CKEYBAY-PRICE', cheapestGame, '\n');
+
+        // CDKEYBAY links are actually links to their api that has their scraping info, thats way we have to fetch it already to get the real url to the seller webpage
+        const {link} = JSON.parse((await webRequest(cheapestGame.link)));
+        console.log('LILNK', link);
+        cheapestGame.link = link;
+
+        const end = new Date() - start
+        console.log('CDKEYBAYEnds....   Time: ',end, '\n');
+        return cheapestGame;
+        
+    }catch(err){
+        console.log('CKEYBAY-ERROR',err);
+    }
+    
+}
+
+async function webRequest(url) {
+    try {
+        const res = await fetch(url)
+        const html = await res.text()
+        return html
+    } catch (err) {
+        console.log('WEBERR',err);
+    }
+}
+
+function getInstantCDKEYBAYTree($){
+    return $('main[id="m"]').children().first().html();
+}
+function getInstantGamingDomTree($){
+    return $('div[class="search"]').children();
+}
+
+function getInstantGamingElementsData($, div_search_children){
+    const elementsData = [];
+    div_search_children.map((i, el) => {
+        const obj = {
+            region: $(el).attr('data-region'),
+            price: $(el).attr('data-price'),
+        }
+        $(el).children().map((index, element) => {
+            const element_class = $(element).attr('class');
+            if (element_class.includes('badge')) {
+                const platform = element_class.split(' ')[1];
+                obj['platform'] = platform;
+            }
+            if (element_class.includes('cover')) {
+                const link = $(element).attr('href');
+                obj['link'] = link;
+            }
+            if (element_class.includes('name')) {
+                const name = $(element).html()
+                obj['name'] = name;
+            }
+        })
+        elementsData.push(new Game(obj))
+    })
+    return elementsData;
+}
+
+function cleanWebData(rawDAta){
+    const stringArray = rawDAta.split(' = ')[1]
+    const array = []
+    JSON.parse(stringArray).map(res=>{
+        const obj = {price:res.price_eur,
+            region:res.zone,
+            platform:res.platform,
+            link:res.link,
+            name:res.name
+        }
+        array.push(new Game(obj))
+    })
+    return array;
+}
+function getCheapestGame(filteredGame){
+    return filteredGame.sort((a,b)=>a-b)[0];
+}
+function filterDesiredGames(allGames){
+    const checkPlatformAndZone = (args)=> {
+
+        const platform = args.platform;
+        const region = args.region;
+
+        const platformValidation = platform.toLowerCase().includes('steam');
+        const zoneValidation = region.toLowerCase().includes('europe') || region.toLowerCase().includes('global')|| region.toLowerCase().includes('worlwide');
+
+        return platformValidation&&zoneValidation;
+    }
+    return allGames.filter(checkPlatformAndZone);
+}
+
+main()
+
