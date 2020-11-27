@@ -20,7 +20,7 @@ async function launchAndGoToPage() {
         var page = null;
         async function navigateToPage() {
             try {
-                browser = await puppeteer.launch({ headless: false }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
+                browser = await puppeteer.launch({ args: ['--no-sandbox'] }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
                 page = await browser.newPage();
                 const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
                 await page.setUserAgent(mozzilla_windows_userAgent);
