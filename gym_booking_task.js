@@ -251,7 +251,7 @@ async function launchAndGoToPage() {
         mailMessage = errorMessage;
 
     } finally {
-        if(CLI_ARGS.mail) await sendEmail({ message_payload: mailMessage, message_type: 'gym' })
+        if(CLI_ARGS.mail&&mailMessage.length > 0) await sendEmail({ message_payload: mailMessage, message_type: 'gym' })
         browser ? await browser.close() : process.exit();
     }
 }
