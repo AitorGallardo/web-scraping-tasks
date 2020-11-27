@@ -227,7 +227,7 @@ async function launchAndGoToPage() {
                         return allTd.filter(tableCell => tableCell.className === 'reservable')[0]
                     }
 
-                    function reserveHour(reservableHour) {
+                    async function reserveHour(reservableHour) {
                         const span = reservableHour.children[0]
                         const a = span.children[0]
                         a.click();
