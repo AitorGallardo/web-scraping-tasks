@@ -175,7 +175,7 @@ async function launchAndGoToPage() {
                         // We Navigate throw DOM tree getting parent element of th=> tr ,then all his siblings and then we filter all the sibling children that are table cells to find the ones that has 'reservable' className on it
                         const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
                         if (firstReservableHour) {
-                            reserveHour(firstReservableHour)
+                            await reserveHour(firstReservableHour)
                         } else {
                             const errorMessage = 'There is not available hour to book at ' + selectedHours[0]
                             notPosibleToBookHours.push(errorMessage)
@@ -184,7 +184,7 @@ async function launchAndGoToPage() {
                             setTimeout(async () => {
                                 const secondReservableHour = await getFirstReservableHourOfATable(tableHeader2);
                                 if (secondReservableHour) {
-                                    reserveHour(secondReservableHour)
+                                    await reserveHour(secondReservableHour)
                                     resolve(notPosibleToBookHours)
                                 } else {
                                     const errorMessage = 'There is not available hour to book at ' + selectedHours[1]
@@ -199,7 +199,7 @@ async function launchAndGoToPage() {
                         const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
                         const firstReservableHour = await getFirstReservableHourOfATable(tableHeader);
                         if (firstReservableHour) {
-                            reserveHour(firstReservableHour)
+                            await reserveHour(firstReservableHour)
                         } else {
                             const errorMessage = 'There is not available hour to book at ' + selectedHours[0]
                             notPosibleToBookHours.push(errorMessage)
@@ -231,10 +231,14 @@ async function launchAndGoToPage() {
                         const span = reservableHour.children[0]
                         const a = span.children[0]
                         a.click();
-                        setTimeout(() => {
-                            const bookButton = document.querySelector('a.boto.enviamentBtn')
-                            bookButton.click()
-                        }, 1000);
+                        const waitOneSecondToClickPromise = new Promise((resolve, reject)=>{
+                            setTimeout(() => {
+                                const bookButton = document.querySelector('a.boto.enviamentBtn')
+                                bookButton.click();
+                                resolve();
+                            }, 1000);
+                        })
+                        await waitOneSecondToClickPromise;
 
                     }
                 } catch (err) {
