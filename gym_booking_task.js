@@ -9,6 +9,7 @@ const CLI_ARGS = require('./cli-args.js')
 const url = 'https://canxaubet.poliwincloud.com/es';
 
 async function launchAndGoToPage() {
+    
     try {
         console.log('CLI_ARGS', CLI_ARGS)
         CLI_ARGS.checkArgs()
@@ -19,17 +20,22 @@ async function launchAndGoToPage() {
         var browser = null;
         var page = null;
         async function navigateToPage() {
-            try {
-                browser = await puppeteer.launch({ args: ['--no-sandbox'] }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
-                page = await browser.newPage();
-                const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
-                await page.setUserAgent(mozzilla_windows_userAgent);
-                await page.goto(url);
-            } catch (err) {
-                const errorMessage = `NavigateToLastPageFUNCTION_ERROR...>${err}`
-                console.log(errorMessage)
-                throw errorMessage;
-            }
+            const maxTries = 5;
+            for (let tries = 0; tries < maxTries; tries++)
+                try {
+                    browser = await puppeteer.launch({ args: ['--no-sandbox'] }); // args needed to run properly on heroku { args: ['--no-sandbox'] }
+                    page = await browser.newPage();
+                    const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
+                    await page.setUserAgent(mozzilla_windows_userAgent);
+                    await page.goto(url);
+                } catch (err) {                    
+                    console.log(`NavigateToPageFUNCTION_ERROR..Try_n: ${tries}..retrying_function=>`,err);                    
+                    if (tries === maxTries - 1) {
+                        const errorMessage = `NavigateToPageFUNCTION_ERROR..MAX_TRIES_REACHED..skyping_function=> ${err}`
+                        console.log(errorMessage)
+                        throw errorMessage;
+                    }
+                }
         }
         async function navigateToLastPage() {
             try {
