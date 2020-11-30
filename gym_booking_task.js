@@ -28,6 +28,8 @@ async function launchAndGoToPage() {
                     const mozzilla_windows_userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0';
                     await page.setUserAgent(mozzilla_windows_userAgent);
                     await page.goto(url);
+                    console.log('1 -> COMPLETED navigateToPage');
+                    return;
                 } catch (err) {                    
                     console.log(`NavigateToPageFUNCTION_ERROR..Try_n: ${tries}..retrying_function=>`,err);                    
                     if (tries === maxTries - 1) {
@@ -46,6 +48,7 @@ async function launchAndGoToPage() {
                 await thirdStep()
                 if(CLI_ARGS.nextDay) await fourthStep()
 
+                console.log('2 -> COMPLETED navigateToLastPage');
 
                 async function login() {
                     const maxTries = 5;
@@ -200,6 +203,7 @@ async function launchAndGoToPage() {
                             }, 10000);
                         })
                         const secondReserveRes = await secondReservePromise;
+                        console.log(`3 -> COMPLETED bookHours`);
                         return secondReserveRes;
                     } else {
                         const [tableHeader] = await getSelectedTableHeaders(arrayOfAllTableHeaders, selectedHours);
@@ -210,6 +214,7 @@ async function launchAndGoToPage() {
                             const errorMessage = 'There is not available hour to book at ' + selectedHours[0]
                             notPosibleToBookHours.push(errorMessage)
                         }
+                        console.log(`3 -> COMPLETED bookHours`);
                         return notPosibleToBookHours;
                     }
 
