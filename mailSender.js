@@ -15,9 +15,11 @@ return new Promise((resolve,reject)=>{
   const name = args.name ? args.name : '<Unknown>'
   const link = args.link ? args.link : '<Unknown>'
   const message_payload = args.message_payload ? args.message_payload : '<Unknown>'
-  const message = message_type === 'game-script' ?  `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
-                                                 <p style="font-size:42px; font-style: italic;" > ${name} € </p>  </br> 
-                                                 ${link}` : `<p style="font-size:48px; font-weight: bold"> ${message_payload}  </p> </br>`;
+  const gym_message = error ? `<p style="font-size:12px; font-weight: bold"> ${message_payload}  </p> </br>` : `<p style="font-size:48px; font-weight: bold"> ${message_payload}  </p> </br>`;
+  const game_message = `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
+  <p style="font-size:42px; font-style: italic;" > ${name} € </p>  </br> 
+  ${link}`;
+  const message = message_type === 'game-script' ?  game_message : gym_message;
 
   try {
     let transporter = nodemailer.createTransport({
