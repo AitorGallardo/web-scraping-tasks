@@ -2,56 +2,69 @@ const nodemailer = require('nodemailer');
 
 require('dotenv').config();
 
-function sendEmail (args) {
-return new Promise((resolve,reject)=>{
+function sendEmail(args) {
+  return new Promise((resolve, reject) => {
+    if(args.gym){
+      var {title,message} = buildGymMessage(args.config);
+    }
+    else if(args.game){
+      var {title,message} = buildGameMessage(args.config);
+    }
+    else{
+      return;
+    }
 
+    try {
+      let transporter = nodemailer.createTransport({
+        service: process.env.MAIL_SERVICE,
+        auth: {
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
 
-  const gymDefaultTitle = '🏋️‍♀🏋️‍♀️🏋️‍♀💀 GYM ALERT 💀🏋️‍♀🏋️‍♀️🏋️‍♀' 
-  const gameScriptDefaultTitle = '🚀🚀🚀BUY SEKIRO🚀🚀🚀'
-  
-  const message_type = args.message_type ? args.message_type : 'game-script'
-  const title = args.title ? args.title : message_type === 'gym' ? gymDefaultTitle : gameScriptDefaultTitle;
-  const price = args.price ? args.price : '<Unknown>'
-  const name = args.name ? args.name : '<Unknown>'
-  const link = args.link ? args.link : '<Unknown>'
-  const message_payload = args.message_payload ? args.message_payload : '<Unknown>'
-  const gym_message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${message_payload}  </p> </br>` : `<p style="font-size:48px; font-weight: bold"> ${message_payload}  </p> </br>`;
-  const game_message = `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
+      var mailOptions = {
+        from: process.env.MAIL_USER,
+        to: process.env.MAIL_TO,
+        subject: title,
+        html: message
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          reject(error)
+        } else {
+          console.log('Email sent: ' + info.response);
+          resolve('Email sent');
+        }
+      });
+
+    } catch (err) {
+      console.log('MAIL-ERROR', err)
+      reject(err)
+    }
+  })
+
+}
+
+function buildGymMessage(args){
+  const title = args.title || '🏋️‍♀🏋️‍♀️🏋️‍♀💀 GYM ALERT 💀🏋️‍♀🏋️‍♀️🏋️‍♀'
+  const message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : 
+                                    `<p style="font-size:48px; font-weight: bold"> ${args.message}  </p> </br>`;
+                                      
+  return {title:title, message:message}
+
+}
+function buildGameMessage(args){
+  const title = args.title || '🚀🚀🚀BUY SEKIRO🚀🚀🚀'
+  const price = args.price || '<Unknown>'
+  const name = args.name || '<Unknown>'
+  const link = args.link || '<Unknown>'
+  const message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
   <p style="font-size:42px; font-style: italic;" > ${name} € </p>  </br> 
   ${link}`;
-  const message = message_type === 'game-script' ?  game_message : gym_message;
 
-  try {
-    let transporter = nodemailer.createTransport({
-      service: process.env.MAIL_SERVICE,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
+  return {title:title, message : message}
+}
 
-    var mailOptions = {
-      from: process.env.MAIL_USER,
-      to: process.env.MAIL_TO,
-      subject: title,
-      html: message
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        reject(error)
-      } else {
-        console.log('Email sent: ' + info.response);
-        resolve('Email sent');
-      }
-  });
-  
-  } catch (err) {
-    console.log('MAIL-ERROR',err)
-    reject(err)
-  }
-})
-
-  }
-
-  module.exports = sendEmail;
+module.exports = sendEmail;

@@ -27,11 +27,13 @@ async function main(){
         console.log('---------> Sending email...');
 
         const mailTitle = cheapestGame.price <= desiredGamePrice ? '🚀🚀🚀BUY SEKIRO🚀🚀🚀' : '💩SEKIRO💩'
-        await sendEmail({ title: mailTitle,...cheapestGame})
+        const config = { title: mailTitle,...cheapestGame}
+        await sendEmail({game:config})
         console.log('TOTAL_TIME: ',end, '\n');
-
+        
     }catch(err){
         console.log('MAIN ERROR > ', err);
+        await sendEmail({game:{error:true,message:err}})
     }
 }
 

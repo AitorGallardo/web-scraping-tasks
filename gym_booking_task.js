@@ -267,11 +267,16 @@ async function launchAndGoToPage() {
 
     } finally {
         if(CLI_ARGS.mail&&mailMessage.length > 0){
-            await sendEmail({ message_payload: mailMessage, message_type: 'gym',error: true })
+            const config = { message: mailMessage ,error: true }
+            await sendEmail({gym:config})
         }else{
-            mailTitle = `✅✅✅🏋️‍♀GYM OKEY🏋️‍♀✅✅✅`
-            mailMessage = `Correctly booked ${CLI_ARGS.firstHour} / ${CLI_ARGS.secondHour} hours 🚀`
-            await sendEmail({ title:mailTitle, message_payload: mailMessage, message_type: 'gym' })
+            const config = {
+                title : `✅✅✅🏋️‍♀GYM OKEY🏋️‍♀✅✅✅`,
+                message:`Correctly booked ${CLI_ARGS.firstHour} / ${CLI_ARGS.secondHour} hours 🚀`
+            }
+            
+            
+            await sendEmail({gym:config})
         } 
         browser ? await browser.close() : process.exit();
     }
