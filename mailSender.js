@@ -49,6 +49,7 @@ function sendEmail(args) {
 }
 
 function buildGymMessage(args){
+  const error = args.error || false;
   const title = args.title || '🏋️‍♀🏋️‍♀️🏋️‍♀💀 GYM ALERT 💀🏋️‍♀🏋️‍♀️🏋️‍♀'
   const message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : 
                                     `<p style="font-size:48px; font-weight: bold"> ${args.message}  </p> </br>`;
@@ -57,12 +58,12 @@ function buildGymMessage(args){
 
 }
 function buildGameMessage(args){
-
-  const title = args.title || '🚀🚀🚀BUY SEKIRO🚀🚀🚀'
+  const error = args.error || false;
+  const title = error ? '⛔⛔🎮GAME-SCRIPT-ERROR🎮⛔⛔': args.title ? args.title : '🚀🚀🎮BUY SEKIRO🎮🚀🚀'
   const price = args.price || '<Unknown>'
   const name = args.name || '<Unknown>'
   const link = args.link || '<Unknown>'
-  const message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
+  const message = error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : `<p style="font-size:48px; font-weight: bold"> Price: ${price} € </p> </br>
   <p style="font-size:42px; font-style: italic;" > ${name} € </p>  </br> 
   ${link}`;
 
