@@ -50,7 +50,7 @@ function sendEmail(args) {
 
 function buildGymMessage(args){
   const error = args.error || false;
-  const title = args.title || '🏋️‍♀🏋️‍♀️🏋️‍♀💀 GYM ALERT 💀🏋️‍♀🏋️‍♀️🏋️‍♀'
+  const title = error ? '⛔⛔🏋️‍♀GYM-SCRIPT-ERROR🏋️‍♀⛔⛔': args.title ? args.title : `✅✅🏋️‍♀GYM OKEY🏋️‍♀✅✅`
   const message = args.error ? `<p style="font-size:12px; font-weight: bold"> ${args.message}  </p> </br>` : 
                                     `<p style="font-size:48px; font-weight: bold"> ${args.message}  </p> </br>`;
                                       
@@ -59,7 +59,8 @@ function buildGymMessage(args){
 }
 function buildGameMessage(args){
   const error = args.error || false;
-  const title = error ? '⛔⛔🎮GAME-SCRIPT-ERROR🎮⛔⛔': args.title ? args.title : '🚀🚀🎮BUY SEKIRO🎮🚀🚀'
+  const buy = args.buy || false;
+  const title = error ? '⛔⛔🎮GAME-SCRIPT-ERROR🎮⛔⛔': args.title ? args.title : buy ? '✅✅🎮BUY SEKIRO🎮✅✅' : '💩💩🎮SEKIRO🎮💩💩';
   const price = args.price || '<Unknown>'
   const name = args.name || '<Unknown>'
   const link = args.link || '<Unknown>'

@@ -26,8 +26,8 @@ async function main() {
         console.log(' --- CHEAPEST_GAME ---', '\n', cheapestGame, '\n', ' ---------------------', '\n');
         console.log('---------> Sending email...');
 
-        const mailTitle = cheapestGame.price <= desiredGamePrice ? '🚀🚀🎮BUY SEKIRO🎮🚀🚀' : '💩💩🎮SEKIRO🎮💩💩'
-        const config = { title: mailTitle, ...cheapestGame }
+        const buy = cheapestGame.price <= desiredGamePrice;
+        const config = { buy : buy, ...cheapestGame }
         await sendEmail({ game: config })
         console.log('TOTAL_TIME: ', end, '\n');
 

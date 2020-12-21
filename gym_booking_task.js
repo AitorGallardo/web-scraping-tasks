@@ -271,7 +271,6 @@ async function launchAndGoToPage() {
             await sendEmail({gym:config})
         }else{
             const config = {
-                title : `✅✅✅🏋️‍♀GYM OKEY🏋️‍♀✅✅✅`,
                 message:`Correctly booked ${CLI_ARGS.firstHour} / ${CLI_ARGS.secondHour} hours 🚀`
             }
             
