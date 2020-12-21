@@ -5,10 +5,11 @@ require('dotenv').config();
 function sendEmail(args) {
   return new Promise((resolve, reject) => {
     if(args.gym){
-      var {title,message} = buildGymMessage(args.config);
+      var {title,message} = buildGymMessage(args.gym);
     }
     else if(args.game){
-      var {title,message} = buildGameMessage(args.config);
+      var {title,message} = buildGameMessage(args.game);
+
     }
     else{
       return;
@@ -56,6 +57,7 @@ function buildGymMessage(args){
 
 }
 function buildGameMessage(args){
+
   const title = args.title || '🚀🚀🚀BUY SEKIRO🚀🚀🚀'
   const price = args.price || '<Unknown>'
   const name = args.name || '<Unknown>'
